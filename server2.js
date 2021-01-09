@@ -4,11 +4,13 @@ const util = require("util");
 const ig = new IgApiClient();
 
 const fs = require("fs");
+require('dotenv').config();
 
 ig.state.generateDevice("aliasghernooruddin");
 
 ig.state.proxyUrl = process.env.IG_PROXY;
 (async () => {
+  console.log("server2")
   await ig.simulate.preLoginFlow();
   const loggedInUser = await ig.account.login(
     process.env.INSTA_USERNAME,
@@ -22,34 +24,34 @@ ig.state.proxyUrl = process.env.IG_PROXY;
   let lvl3 = [];
   const half = Math.ceil(lvl2.length / 2);
   const secondHalf = lvl2.splice(-half)
-  for (let pk = 0; pk <= secondHalf.length; pk++) {
-    for (let username = 0; username < secondHalf[pk].length; username++) {
-      // let data = secondHalf[pk][username]
-      // let obj = await ig.discover.chaining(data.pk);
+  var stream = fs.createWriteStream("lvl3.json", {flags:'a'});
+  console.log("here starting")
+  for (let parentInd = 0; parentInd <= secondHalf.length; parentInd++) {
+    console.log("fetched parents", parentInd)
+    for (let childInd = 0; childInd < secondHalf[parentInd].length; childInd++) {
+      let parent = secondHalf[parentInd][childInd]
+      console.log("first parent", parent)
       try {
-        let data = secondHalf[pk][username]
-       let obj = await ig.discover.chaining(data.pk);
-       obj = obj["users"].map((item) => {
-        temp = temp + 1
-        console.log(temp)
-        return {
-          pk: item.pk,
-          username: item.username,
-          parent: data.username,
-        };
-      });
-      lvl3.push(obj)
-      .then(() => {
-        fs.writeFile("lvl2.json", JSON.stringify(lvl2), function (err) {
-          if (err) {
-            console.log(err);
-          }
+        let child = await ig.discover.chaining(parent.pk);
+        console.log("fetch child")
+        child = child["users"].map((item) => {
+          return {
+            pk: item.pk,
+            username: item.username,
+            parent: parent.username,
+          };
         });
-      });
-      } catch (error) {
-        console.log(error);
-      }     
-  }};
+        stream.write(JSON.stringify(child))
+        lvl3.push(child)
+      }  catch(err) {
+        console.log(err)
+        childInd--
+        await sleep(3000)
+      }
+      
+    }
+  }  
+
 
 })().catch((err) => {
   console.log(err);

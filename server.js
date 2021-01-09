@@ -1,11 +1,12 @@
 const { IgApiClient } = require("instagram-private-api");
 const util = require("util");
-
+require('dotenv').config();
 const ig = new IgApiClient();
+const { spawn } = require("child_process");
 
 const fs = require("fs");
 
-ig.state.generateDevice("aliasghernooruddin");
+ig.state.generateDevice("itsmemzian");
 
 ig.state.proxyUrl = process.env.IG_PROXY;
 (async () => {
@@ -21,10 +22,16 @@ ig.state.proxyUrl = process.env.IG_PROXY;
   let lvl1 = data["users"];
 
   lvl1 = lvl1.map((item) => {
+    console.log(item)
     return {
       pk: item.pk,
       username: item.username,
       parent: "sephora",
+      is_verified: item.is_verified,
+      full_name: item.full_name,
+      profile_pic_url: item.profile_pic_url,
+      
+
     };
   });
 
@@ -46,7 +53,6 @@ ig.state.proxyUrl = process.env.IG_PROXY;
           parent: lvl.username,
         };
       });
-      
       lvl2.push(obj);
     })
   ).then(() => {
@@ -56,7 +62,27 @@ ig.state.proxyUrl = process.env.IG_PROXY;
       }
     });
   });
+console.log("done level1 and level2")
+
+const level3Run = spawn("npm", ['run', 'level3']);
+level3Run.stdout.on("data", data => {
+  console.log(`stdout: ${data}`);
+});
+
+level3Run.stderr.on("data", data => {
+  console.log(`stderr: ${data}`);
+});
+
+level3Run.on('error', (error) => {
+  console.log(`error: ${error.message}`);
+});
+
+level3Run.on("close", code => {
+  console.log(`child process exited with code ${code}`);
+});
+
 
 })().catch((err) => {
   console.log(err);
 });
+

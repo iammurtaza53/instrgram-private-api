@@ -5,12 +5,16 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "level3": "concurrently 'node server1.js' 'node server2.js' "
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "child_process": "^1.0.2",
+    "dotenv": "^8.2.0",
     "instagram-private-api": "^1.43.3",
-    "nodemon": "^2.0.6"
+    "nodemon": "^2.0.6",
+    "re2": "^1.15.9"
   }
 }

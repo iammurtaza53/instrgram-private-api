@@ -25,13 +25,13 @@ ig.state.proxyUrl = process.env.IG_PROXY;
   const csvWriter3 = createCsvWriter({
     path: 'level3.csv',
     header: [
-        {id: 'pk', title: 'ID'},
-        {id: 'username', title: 'User Name'},
-        {id: 'parent', title: 'Parent'}
+      { id: 'pk', title: 'ID' },
+      { id: 'username', title: 'User Name' },
+      { id: 'parent', title: 'Parent' }
     ],
-    append:true
-});
-  var stream = fs.createWriteStream("lvl3.json", {flags:'a'});
+    append: true
+  });
+  var stream = fs.createWriteStream("lvl3.json", { flags: 'a' });
   console.log("here starting")
   for (let parentInd = 0; parentInd <= firstHalf.length; parentInd++) {
     console.log("fetched parents", parentInd)
@@ -51,67 +51,25 @@ ig.state.proxyUrl = process.env.IG_PROXY;
         stream.write(JSON.stringify(child))
         lvl3.push(child)
         csvWriter3.writeRecords(child)       // returns a promise
-        .then(() => {
+          .then(() => {
             console.log('...Done');
-        });
-      }  catch(err) {
+          });
+      } catch (err) {
         console.log(err)
         childInd--
         await sleep(3000)
       }
-      
+
     }
-  }    
-  
+  }
+
 
 
   function sleep(ms) {
     return new Promise((resolve) => {
       setTimeout(resolve, ms);
     });
-  } 
-
-
-  // for (let parentInd = 0; parentInd <= firstHalf.length; parentInd++) {
-  //   for (let childInd = 0; childInd < firstHalf[parentInd].length; childInd++) {
-
-  // }
-
-
-
-
-
-  // for (let pk = 0; pk <= firstHalf.length; pk++) {
-  //   for (let username = 0; username < firstHalf[pk].length; username++) {
-  //     let counter = 0;
-  //     while (counter < 3) {
-  //       try {
-  //         counter = counter + 1
-  //         let data = firstHalf[pk][username];
-  //         let obj = await ig.discover.chaining(data.pk);
-  //         obj = obj["users"].map((item) => {
-  //           temp = temp + 1;
-  //           console.log(temp);
-  //           return {
-  //             pk: item.pk,
-  //             username: item.username,
-  //             parent: data.username,
-  //           };
-  //         });
-  //         lvl3.push(obj).then(() => {
-  //           fs.writeFile("lvl3.json", JSON.stringify(lvl2), function (err) {
-  //             if (err) {
-  //               console.log(err);
-  //             }
-  //           });
-  //         });
-  //       } catch (error) {
-  //         console.log(error);
-  //       }
-  //     }
-  //   }
-  // }
-
+  }
 
 })().catch((err) => {
   console.log(err);

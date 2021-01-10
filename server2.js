@@ -1,6 +1,6 @@
 const { IgApiClient } = require("instagram-private-api");
 const util = require("util");
-
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const ig = new IgApiClient();
 
 const fs = require("fs");
@@ -22,6 +22,16 @@ ig.state.proxyUrl = process.env.IG_PROXY;
   let temp = 0
   
   let lvl3 = [];
+  const csvWriter3 = createCsvWriter({
+    path: 'level3.csv',
+    header: [
+        {id: 'pk', title: 'ID'},
+        {id: 'username', title: 'User Name'},
+        {id: 'parent', title: 'Parent'}
+    ],
+    append:true
+});
+
   const half = Math.ceil(lvl2.length / 2);
   const secondHalf = lvl2.splice(-half)
   var stream = fs.createWriteStream("lvl3.json", {flags:'a'});
@@ -43,6 +53,10 @@ ig.state.proxyUrl = process.env.IG_PROXY;
         });
         stream.write(JSON.stringify(child))
         lvl3.push(child)
+        csvWriter3.writeRecords(child)       // returns a promise
+        .then(() => {
+            console.log('...Done');
+        });
       }  catch(err) {
         console.log(err)
         childInd--

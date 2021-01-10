@@ -1,10 +1,12 @@
 const { IgApiClient } = require("instagram-private-api");
 const util = require("util");
 require('dotenv').config();
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const ig = new IgApiClient();
 const { spawn } = require("child_process");
 
 const fs = require("fs");
+const { exit } = require("process");
 
 ig.state.generateDevice("itsmemzian");
 
@@ -30,19 +32,37 @@ ig.state.proxyUrl = process.env.IG_PROXY;
       is_verified: item.is_verified,
       full_name: item.full_name,
       profile_pic_url: item.profile_pic_url,
-      
-
     };
   });
-
-  fs.writeFile("lvl1.json", JSON.stringify(lvl1), function (err) {
-    if (err) {
-      console.log(err);
-    }
+  
+  const csvWriter1 = createCsvWriter({
+      path: 'level1.csv',
+      header: [
+          {id: 'pk', title: 'ID'},
+          {id: 'username', title: 'User Name'},
+          {id: 'parent', title: 'Parent'}
+      ]
   });
+  csvWriter1.writeRecords(lvl1)       // returns a promise
+    .then(() => {
+        console.log('...Done');
+    });
+
+  // fs.writeFile("lvl1.json", JSON.stringify(lvl1), function (err) {
+  //   if (err) {
+  //     console.log(err);
+  //   }
+  // });
 
   let lvl2 = [];
-
+  const csvWriter2 = createCsvWriter({
+    path: 'level2.csv',
+    header: [
+        {id: 'pk', title: 'ID'},
+        {id: 'username', title: 'User Name'},
+        {id: 'parent', title: 'Parent'}
+    ]
+  });
   await Promise.all(
     lvl1.map(async (lvl) => {
       let obj = await ig.discover.chaining(lvl.pk);
@@ -53,6 +73,11 @@ ig.state.proxyUrl = process.env.IG_PROXY;
           parent: lvl.username,
         };
       });
+      csvWriter2.writeRecords(obj)       // returns a promise
+      .then(() => {
+          console.log('...Done');
+      });
+
       lvl2.push(obj);
     })
   ).then(() => {

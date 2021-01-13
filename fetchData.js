@@ -76,8 +76,11 @@ ig.state.proxyUrl = process.env.IG_PROXY;
     async function fetchCompleteData(entity) {
         try {
             const user = await ig.user.getIdByUsername(entity["User Name"]);
+            await sleep(2000);
             const userInfo = await ig.user.info(user)
+            await sleep(2000);
             const feeds = await ig.feed.user(user).items()
+            await sleep(2000);
            
             let objToWrite = {
                 pk: userInfo.pk,

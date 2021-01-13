@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "level3": "concurrently 'node server1.js' 'node server2.js' "
+    "level3": "concurrently 'node server1.js' 'node server2.js' ",
+    "complete-data": "concurrently 'node fetchData.js' 'node fetchData20k-2.js' 'node fetchData20k-3.js' 'node fetchData20k-4.js' 'node fetchData20k-5.js' "
   },
   "author": "",
   "license": "ISC",

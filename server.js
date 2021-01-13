@@ -18,7 +18,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
     process.env.INSTA_PASSWORD
   );
 
-  const user = await ig.user.getIdByUsername("sephora");
+  const user = await ig.user.getIdByUsername("adidas");
   // const userFeed = await ig.user.info(user)
   // console.log(userFeed)
 
@@ -56,7 +56,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
     return {
       pk: item.pk,
       username: item.username,
-      parent: "sephora",
+      parent: "adidas",
       is_verified: item.is_verified,
       full_name: item.full_name,
       profile_pic_url: item.profile_pic_url,

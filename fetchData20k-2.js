@@ -29,7 +29,6 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             process.env.INSTA_PASSWORD
         );
     }
-
     const csvWriter = createCsvWriter({
         path: 'complete.csv',
         header: [
@@ -59,8 +58,8 @@ ig.state.proxyUrl = process.env.IG_PROXY;
         let converter = csv()
             .fromFile(fileName)
             .then((json) => {
-                const firstHalf = json.splice(0, 20000);
-                console.log("Fetching data 0-20000, Length", firstHalf.length)
+                const firstHalf = json.splice(20000, 20000);
+                console.log("Fetching data 20000-40000, Length", firstHalf.length)
 
                 firstHalf.forEach(async (entry) => {
                     if (!!entry && !!entry["User Name"]) {

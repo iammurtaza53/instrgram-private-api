@@ -54,33 +54,33 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             { id: 'date_first_post', title: 'Date of first post' }
         ]
     });
-    let filesToRead = ['./level3.csv']
-    filesToRead.forEach((fileName) => {
-        let converter = csv()
-            .fromFile(fileName)
-            .then((json) => {
-                const firstHalf = json.splice(0, 20000);
-                console.log("Fetching data 0-20000, Length", firstHalf.length)
+    let fileName = './level3.csv'
+    const converter = csv()
+        .fromFile(fileName)
+        .then(async (json) => {
+            const firstHalf = json.splice(0, 20000);
+            console.log("Fetching data 0-20000, Length", firstHalf.length)
+            let i = 0;
+            for (let i =0; i< firstHalf.length; i++) {
+                let entry = firstHalf[i]
+                if (!!entry && !!entry["User Name"]) {
+                    console.log("fetching complete data for user ", entry["User Name"])
+                    await fetchCompleteData(entry, i)
+                }
+            }
 
-                firstHalf.forEach(async (entry) => {
-                    if (!!entry && !!entry["User Name"]) {
-                        console.log("fetching complete data for user ", entry["User Name"])
-                        await fetchCompleteData(entry)
-                        await sleep(2000);
-                    }
-                })
+        })
 
-            })
-    })
-
-    async function fetchCompleteData(entity) {
+    async function fetchCompleteData(entity, i) {
         try {
+            console.log("starting for user ", i, Date.now())
             const user = await ig.user.getIdByUsername(entity["User Name"]);
-            await sleep(2000);
+            await sleep(1000);
             const userInfo = await ig.user.info(user)
-            await sleep(2000);
+            await sleep(1000);
             const feeds = await ig.feed.user(user).items()
-            await sleep(2000);
+            await sleep(1000);
+            console.log("continue for user ", i)
            
             let objToWrite = {
                 pk: userInfo.pk,
@@ -105,18 +105,20 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             }
             objToWrite = getLast10PostDetails(feeds, objToWrite)
           
-            console.log(objToWrite)
+            console.log("all post fetched, now writing record", i, Date.now())
+
             
     
-            csvWriter.writeRecords(objToWrite)       // returns a promise
+            csvWriter.writeRecords([objToWrite])       // returns a promise
             .then(() => {
             console.log('...Done write object');
             });
         }
        catch(err) {
-           console.log("error here, sleeping for 5 seconds", err)
-            await sleep(5000);
-            fetchCompleteData(entity)
+           if (err.message.includes("wait a few minutes before"))
+            console.log("error here, sleeping for 5 minutes", err)
+            await sleep(300000);
+            await fetchCompleteData(entity)
         }
         
 

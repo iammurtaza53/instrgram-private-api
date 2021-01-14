@@ -3,74 +3,110 @@ const util = require("util");
 require('dotenv').config();
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const ig = new IgApiClient();
-const { spawn } = require("child_process");
 const csv = require('csvtojson')
 
 const fs = require("fs");
 const { exit } = require("process");
-
+const { spawn } = require("child_process");
 ig.state.generateDevice("itsmemzian");
 
 ig.state.proxyUrl = process.env.IG_PROXY;
 (async () => {
-    try {
-        await ig.simulate.preLoginFlow();
-        const loggedInUser = await ig.account.login(
-            process.env.INSTA_USERNAME,
-            process.env.INSTA_PASSWORD
-        );
-    } 
-    catch (err) {
-        console.log("Error occured while login", err)
-        await sleep(5000);
-        await ig.simulate.preLoginFlow();
-        const loggedInUser = await ig.account.login(
-            process.env.INSTA_USERNAME,
-            process.env.INSTA_PASSWORD
-        );
+    let script = -1
+    if (process.argv.length > 2) {
+        script = process.argv[3]
     }
 
-    const csvWriter = createCsvWriter({
-        path: 'complete.csv',
-        header: [
-            { id: 'pk', title: 'ID' },
-            { id: 'username', title: 'User Name' },
-            { id: 'is_verified', title: 'Verified Status' },
-            { id: 'insta_classification_cat', title: 'Instagram Classification Category' },
-            { id: 'profile_name', title: 'Profile Name' },
-            { id: 'profile_photo', title: 'Profile Photo' },
-            { id: 'bio', title: 'Bio' },
-            { id: 'website', title: 'Website' },
-            { id: 'email', title: 'Email' },
-            { id: 'followers_count', title: 'Number of followers' },
-            { id: 'following_count', title: 'Number of following' },
-            { id: 'posts_count', title: 'Number of posts' },
-            { id: 'likes_count', title: 'Number of likes' },
-            { id: 'comments_count', title: 'Number of comments' },
-            { id: 'videoviews_count', title: 'Number of video views' },
-            { id: 'hashtags', title: 'Hashtags' },
-            { id: 'usernames_tagged', title: 'Usernames tagged' },
-            { id: 'captions', title: 'Caption text' },
-            { id: 'date_first_post', title: 'Date of first post' }
-        ]
-    });
-    let fileName = './level3.csv'
-    const converter = csv()
-        .fromFile(fileName)
-        .then(async (json) => {
-            const firstHalf = json.splice(0, 20000);
-            console.log("Fetching data 0-20000, Length", firstHalf.length)
-            let i = 0;
-            for (let i =0; i< firstHalf.length; i++) {
-                let entry = firstHalf[i]
-                if (!!entry && !!entry["User Name"]) {
-                    console.log("fetching complete data for user ", entry["User Name"])
-                    await fetchCompleteData(entry, i)
+    let sliceMap = Array.from({length:10}, (e, i)=>i*10000)
+    if (script == -1) {
+        for(let i=0; i<10; i++) {
+            let level3Run = spawn("node", ['fetchData.js', i])
+            level3Run.stdout.on("data", data => {
+              console.log(`stdout for ${i}: ${data}`);
+            });
+          
+            level3Run.stderr.on("data", data => {
+              console.log(`stderr for ${i}: ${data}`);
+            });
+          
+            level3Run.on('error', (error) => {
+              console.log(`error: for ${i} ${error.message}`);
+            });
+          
+            level3Run.on("close", code => {
+              console.log(`child process exited with code ${code}`);
+            });
+            await sleep(2000)
+
+        }
+    } else {
+        try {
+            await ig.simulate.preLoginFlow();
+            const loggedInUser = await ig.account.login(
+                process.env.INSTA_USERNAME,
+                process.env.INSTA_PASSWORD
+            );
+        } 
+        catch (err) {
+            console.log("Error occured while login", err)
+            await sleep(5000);
+            await ig.simulate.preLoginFlow();
+            const loggedInUser = await ig.account.login(
+                process.env.INSTA_USERNAME,
+                process.env.INSTA_PASSWORD
+            );
+        }
+        await runScript(sliceMap[script]);
+
+    }
+
+
+
+
+
+    async function runScript(slice) {
+        const csvWriter = createCsvWriter({
+            path: 'complete.csv',
+            header: [
+                { id: 'pk', title: 'ID' },
+                { id: 'username', title: 'User Name' },
+                { id: 'is_verified', title: 'Verified Status' },
+                { id: 'insta_classification_cat', title: 'Instagram Classification Category' },
+                { id: 'profile_name', title: 'Profile Name' },
+                { id: 'profile_photo', title: 'Profile Photo' },
+                { id: 'bio', title: 'Bio' },
+                { id: 'website', title: 'Website' },
+                { id: 'email', title: 'Email' },
+                { id: 'followers_count', title: 'Number of followers' },
+                { id: 'following_count', title: 'Number of following' },
+                { id: 'posts_count', title: 'Number of posts' },
+                { id: 'likes_count', title: 'Number of likes' },
+                { id: 'comments_count', title: 'Number of comments' },
+                { id: 'videoviews_count', title: 'Number of video views' },
+                { id: 'hashtags', title: 'Hashtags' },
+                { id: 'usernames_tagged', title: 'Usernames tagged' },
+                { id: 'captions', title: 'Caption text' },
+                { id: 'date_first_post', title: 'Date of first post' }
+            ]
+        });
+        let fileName = './level3.csv'
+        const converter = csv()
+            .fromFile(fileName)
+            .then(async (json) => {
+                const firstHalf = json.splice(slice, 10000);
+                console.log("Fetching data "+slice+", Length", firstHalf.length)
+                let i = 0;
+                for (let i =0; i< firstHalf.length; i++) {
+                    let entry = firstHalf[i]
+                    if (!!entry && !!entry["User Name"]) {
+                        console.log("fetching complete data for user ", entry["User Name"])
+                        await fetchCompleteData(entry, i)
+                    }
                 }
-            }
-
-        })
-
+    
+            })
+    
+    }
     async function fetchCompleteData(entity, i) {
         try {
             console.log("starting for user ", i, Date.now())

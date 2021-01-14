@@ -14,13 +14,13 @@ ig.state.proxyUrl = process.env.IG_PROXY;
 (async () => {
     let script = -1
     if (process.argv.length > 2) {
-        script = process.argv[3]
+        script = parseInt(process.argv[2])
     }
 
     let sliceMap = Array.from({length:10}, (e, i)=>i*10000)
     if (script == -1) {
         for(let i=0; i<10; i++) {
-            let level3Run = spawn("node", ['fetchData.js', i])
+            let level3Run = spawn("node", ['fetchData.js', i.toString()])
             level3Run.stdout.on("data", data => {
               console.log(`stdout for ${i}: ${data}`);
             });
@@ -42,6 +42,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
     } else {
         try {
             await ig.simulate.preLoginFlow();
+
             const loggedInUser = await ig.account.login(
                 process.env.INSTA_USERNAME,
                 process.env.INSTA_PASSWORD

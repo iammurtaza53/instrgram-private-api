@@ -90,7 +90,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
                 { id: 'date_first_post', title: 'Date of first post' }
             ]
         });
-        let fileName = './level3.csv'
+        let fileName = './100K-list.csv'
         const converter = csv()
             .fromFile(fileName)
             .then(async (json) => {

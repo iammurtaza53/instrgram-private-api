@@ -136,6 +136,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             console.log("error here, sleeping for 5 minutes", err)
             await sleep(300000);
             await fetchCompleteData(entity)
+        }
     }
 
     async  function tryLogin() {

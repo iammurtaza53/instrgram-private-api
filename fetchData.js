@@ -155,6 +155,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
                         user['Username'],
                         user['Password']
                     );
+                    console.log("login done")
                 } 
                 catch (err) {
                     console.log("Error occured while login", err.message)

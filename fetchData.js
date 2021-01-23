@@ -161,7 +161,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
                 } 
                 catch (err) {
                     console.log("Error occured while login", err)
-                    await sleep(20000);
+                    await sleep(30000);
                     tryLogin()
                 }
     

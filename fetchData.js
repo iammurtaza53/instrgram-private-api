@@ -17,9 +17,9 @@ ig.state.proxyUrl = process.env.IG_PROXY;
         script = parseInt(process.argv[2])
     }
 
-    let sliceMap = Array.from({length:10}, (e, i)=>i*10000)
+    let sliceMap = Array.from({length:25}, (e, i)=>i*4000)
     if (script == -1) {
-        for(let i=0; i<10; i++) {
+        for(let i=0; i<25; i++) {
             let level3Run = spawn("node", ['fetchData.js', i.toString()])
             level3Run.stdout.on("data", data => {
               console.log(`stdout for ${i}: ${data}`);
@@ -46,39 +46,38 @@ ig.state.proxyUrl = process.env.IG_PROXY;
     }
 
     
-
+    const csvWriter = createCsvWriter({
+        path: 'final-complete.csv',
+        header: [
+            { id: 'pk', title: 'ID' },
+            { id: 'username', title: 'User Name' },
+            { id: 'is_verified', title: 'Verified Status' },
+            { id: 'insta_classification_cat', title: 'Instagram Classification Category' },
+            { id: 'profile_name', title: 'Profile Name' },
+            { id: 'profile_photo', title: 'Profile Photo' },
+            { id: 'bio', title: 'Bio' },
+            { id: 'website', title: 'Website' },
+            { id: 'email', title: 'Email' },
+            { id: 'followers_count', title: 'Number of followers' },
+            { id: 'following_count', title: 'Number of following' },
+            { id: 'posts_count', title: 'Number of posts' },
+            { id: 'likes_count', title: 'Number of likes' },
+            { id: 'comments_count', title: 'Number of comments' },
+            { id: 'videoviews_count', title: 'Number of video views' },
+            { id: 'hashtags', title: 'Hashtags' },
+            { id: 'usernames_tagged', title: 'Usernames tagged' },
+            { id: 'captions', title: 'Caption text' },
+            { id: 'date_first_post', title: 'Date of first post' }
+        ]
+    });
 
 
     async function runScript(slice) {
-        const csvWriter = createCsvWriter({
-            path: 'final-complete.csv',
-            header: [
-                { id: 'pk', title: 'ID' },
-                { id: 'username', title: 'User Name' },
-                { id: 'is_verified', title: 'Verified Status' },
-                { id: 'insta_classification_cat', title: 'Instagram Classification Category' },
-                { id: 'profile_name', title: 'Profile Name' },
-                { id: 'profile_photo', title: 'Profile Photo' },
-                { id: 'bio', title: 'Bio' },
-                { id: 'website', title: 'Website' },
-                { id: 'email', title: 'Email' },
-                { id: 'followers_count', title: 'Number of followers' },
-                { id: 'following_count', title: 'Number of following' },
-                { id: 'posts_count', title: 'Number of posts' },
-                { id: 'likes_count', title: 'Number of likes' },
-                { id: 'comments_count', title: 'Number of comments' },
-                { id: 'videoviews_count', title: 'Number of video views' },
-                { id: 'hashtags', title: 'Hashtags' },
-                { id: 'usernames_tagged', title: 'Usernames tagged' },
-                { id: 'captions', title: 'Caption text' },
-                { id: 'date_first_post', title: 'Date of first post' }
-            ]
-        });
         let fileName = './100K-list.csv'
         const converter = csv()
             .fromFile(fileName)
             .then(async (json) => {
-                const firstHalf = json.splice(slice, 10000);
+                const firstHalf = json.splice(slice, 4000);
                 console.log("Fetching data "+slice+", Length", firstHalf.length)
                 let i = 0;
                 for (let i =0; i< firstHalf.length; i++) {
@@ -94,14 +93,14 @@ ig.state.proxyUrl = process.env.IG_PROXY;
     }
     async function fetchCompleteData(entity, i) {
         try {
-            console.log("starting for user ", i, Date.now())
+            console.log("starting for user ", entity["User Name"], Date.now())
             const user = await ig.user.getIdByUsername(entity["User Name"]);
             await sleep(1000);
             const userInfo = await ig.user.info(user)
             await sleep(1000);
             const feeds = await ig.feed.user(user).items()
             await sleep(1000);
-            console.log("continue for user ", i)
+            console.log("continue for user ", entity["User Name"])
            
             let objToWrite = {
                 pk: userInfo.pk,
@@ -126,7 +125,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             }
             objToWrite = getLast10PostDetails(feeds, objToWrite)
           
-            console.log("all post fetched, now writing record", i, Date.now())
+            console.log("all post fetched, now writing record", entity["User Name"], Date.now())
 
             csvWriter.writeRecords([objToWrite])       // returns a promise
             .then(() => {
@@ -139,8 +138,6 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             await sleep(300000);
             await fetchCompleteData(entity)
         }
-        
-
     }
 
     async  function tryLogin() {
@@ -149,7 +146,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             .fromFile(fileName)
             .then(async (json) => {
                 let user = json[getRandomInt(0, 99)]
-                console.log(getRandomInt(0, 99))
+                console.log("login user by ", getRandomInt(0, 99))
                 
                 try {
                     await ig.simulate.preLoginFlow();
@@ -160,8 +157,8 @@ ig.state.proxyUrl = process.env.IG_PROXY;
                     );
                 } 
                 catch (err) {
-                    console.log("Error occured while login", err)
-                    await sleep(30000);
+                    console.log("Error occured while login", err.message)
+                    await sleep(200000);
                     tryLogin()
                 }
     

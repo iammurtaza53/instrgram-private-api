@@ -8,7 +8,7 @@ const csv = require('csvtojson')
 const fs = require("fs");
 const { exit } = require("process");
 const { spawn } = require("child_process");
-ig.state.generateDevice("itsmemzian");
+ig.state.generateDevice("someotheunqiueid");
 
 ig.state.proxyUrl = process.env.IG_PROXY;
 (async () => {
@@ -40,34 +40,18 @@ ig.state.proxyUrl = process.env.IG_PROXY;
 
         }
     } else {
-        try {
-            await ig.simulate.preLoginFlow();
-
-            const loggedInUser = await ig.account.login(
-                process.env.INSTA_USERNAME,
-                process.env.INSTA_PASSWORD
-            );
-        } 
-        catch (err) {
-            console.log("Error occured while login", err)
-            await sleep(5000);
-            await ig.simulate.preLoginFlow();
-            const loggedInUser = await ig.account.login(
-                process.env.INSTA_USERNAME,
-                process.env.INSTA_PASSWORD
-            );
-        }
+        await tryLogin();
         await runScript(sliceMap[script]);
 
     }
 
-
+    
 
 
 
     async function runScript(slice) {
         const csvWriter = createCsvWriter({
-            path: 'complete.csv',
+            path: 'final-complete.csv',
             header: [
                 { id: 'pk', title: 'ID' },
                 { id: 'username', title: 'User Name' },
@@ -144,8 +128,6 @@ ig.state.proxyUrl = process.env.IG_PROXY;
           
             console.log("all post fetched, now writing record", i, Date.now())
 
-            
-    
             csvWriter.writeRecords([objToWrite])       // returns a promise
             .then(() => {
             console.log('...Done write object');
@@ -160,6 +142,38 @@ ig.state.proxyUrl = process.env.IG_PROXY;
         
 
     }
+
+    async  function tryLogin() {
+        let fileName = './insta-user-pass.csv'
+        const converter = csv()
+            .fromFile(fileName)
+            .then(async (json) => {
+                let user = json[getRandomInt(0, 99)]
+                console.log(getRandomInt(0, 99))
+                
+                try {
+                    await ig.simulate.preLoginFlow();
+        
+                    const loggedInUser = await ig.account.login(
+                        user['Username'],
+                        user['Password']
+                    );
+                } 
+                catch (err) {
+                    console.log("Error occured while login", err)
+                    await sleep(20000);
+                    tryLogin()
+                }
+    
+            })
+    }
+
+    function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    
 
     // }
     function sleep(ms) {

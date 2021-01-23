@@ -133,11 +133,9 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             });
         }
        catch(err) {
-           if (err.message.includes("wait a few minutes before"))
             console.log("error here, sleeping for 5 minutes", err)
             await sleep(300000);
             await fetchCompleteData(entity)
-        }
     }
 
     async  function tryLogin() {

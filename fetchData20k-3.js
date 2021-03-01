@@ -13,24 +13,9 @@ ig.state.generateDevice("itsmemzian");
 
 ig.state.proxyUrl = process.env.IG_PROXY;
 (async () => {
-    try {
-        await ig.simulate.preLoginFlow();
-        const loggedInUser = await ig.account.login(
-            process.env.INSTA_USERNAME,
-            process.env.INSTA_PASSWORD
-        );
-    } 
-    catch (err) {
-        console.log("Error occured while login", err)
-        await sleep(5000);
-        await ig.simulate.preLoginFlow();
-        const loggedInUser = await ig.account.login(
-            process.env.INSTA_USERNAME,
-            process.env.INSTA_PASSWORD
-        );
-    }
+    await tryLogin()
     const csvWriter = createCsvWriter({
-        path: 'complete.csv',
+        path: 'fetch-complete.csv'
         header: [
             { id: 'pk', title: 'ID' },
             { id: 'username', title: 'User Name' },

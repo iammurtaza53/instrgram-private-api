@@ -9,28 +9,13 @@ const csv = require('csvtojson')
 const fs = require("fs");
 const { exit } = require("process");
 
-ig.state.generateDevice("itsmemzian");
+ig.state.generateDevice("someunqiueid");
 
 ig.state.proxyUrl = process.env.IG_PROXY;
 (async () => {
-    try {
-        await ig.simulate.preLoginFlow();
-        const loggedInUser = await ig.account.login(
-            process.env.INSTA_USERNAME,
-            process.env.INSTA_PASSWORD
-        );
-    } 
-    catch (err) {
-        console.log("Error occured while login", err)
-        await sleep(5000);
-        await ig.simulate.preLoginFlow();
-        const loggedInUser = await ig.account.login(
-            process.env.INSTA_USERNAME,
-            process.env.INSTA_PASSWORD
-        );
-    }
+    await tryLogin()
     const csvWriter = createCsvWriter({
-        path: 'complete.csv',
+        path: 'fetch-complete-new-list.csv',
         header: [
             { id: 'pk', title: 'ID' },
             { id: 'username', title: 'User Name' },
@@ -53,7 +38,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             { id: 'date_first_post', title: 'Date of first post' }
         ]
     });
-    let fileName = './level3.csv'
+    let fileName = './100K-list.csv'
     const converter = csv()
         .fromFile(fileName)
         .then(async (json) => {
@@ -72,14 +57,24 @@ ig.state.proxyUrl = process.env.IG_PROXY;
 
     async function fetchCompleteData(entity, i) {
         try {
-            console.log("starting for user ", i, Date.now())
+            if (!entity || !entity["User Name"]) {
+                return
+            }
+            if (i === 5000) {
+                await tryLogin()
+            } else if (i === 10000) {
+                await tryLogin()
+            } else if (i === 15000) {
+                await tryLogin()
+            }
+            console.log("starting for user ", entity["User Name"], Date.now())
             const user = await ig.user.getIdByUsername(entity["User Name"]);
             await sleep(1000);
             const userInfo = await ig.user.info(user)
             await sleep(1000);
             const feeds = await ig.feed.user(user).items()
             await sleep(1000);
-            console.log("continue for user ", i)
+            console.log("continue for user ", entity["User Name"])
            
             let objToWrite = {
                 pk: userInfo.pk,
@@ -104,7 +99,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             }
             objToWrite = getLast10PostDetails(feeds, objToWrite)
           
-            console.log("all post fetched, now writing record", i, Date.now())
+            console.log("all post fetched, now writing record", entity["User Name"], Date.now())
 
             
     
@@ -114,15 +109,45 @@ ig.state.proxyUrl = process.env.IG_PROXY;
             });
         }
        catch(err) {
-           if (err.message.includes("wait a few minutes before"))
+           if (err.message.includes("wait a few minutes before") && i > 0)
             console.log("error here, sleeping for 5 minutes", err)
-            await sleep(300000);
-            await fetchCompleteData(entity)
+            await sleep(5000);
+            await fetchCompleteData(entity, -1)
         }
         
 
     }
 
+    async  function tryLogin() {
+        let fileName = './insta-user-pass.csv'
+        const converter = csv()
+            .fromFile(fileName)
+            .then(async (json) => {
+                let user = json[getRandomInt(291, 389)]
+                console.log(user)
+                
+                try {
+                    await ig.simulate.preLoginFlow();
+        
+                    const loggedInUser = await ig.account.login(
+                        user['Username'],
+                        user['Password']
+                    );
+                } 
+                catch (err) {
+                    console.log("Error occured while login", err)
+                    await sleep(10000);
+                    tryLogin()
+                }
+    
+            })
+    }
+
+    function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
     // }
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));

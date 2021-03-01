@@ -47,7 +47,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
 
     
     const csvWriter = createCsvWriter({
-        path: 'final-complete.csv',
+        path: 'final-complete1.csv',
         header: [
             { id: 'pk', title: 'ID' },
             { id: 'username', title: 'User Name' },
@@ -134,7 +134,7 @@ ig.state.proxyUrl = process.env.IG_PROXY;
         }
        catch(err) {
             console.log("error here, sleeping for 5 minutes", err)
-            await sleep(300000);
+            await sleep(10000);
             await tryLogin()
             await fetchCompleteData(entity)
         }
@@ -145,8 +145,8 @@ ig.state.proxyUrl = process.env.IG_PROXY;
         const converter = csv()
             .fromFile(fileName)
             .then(async (json) => {
-                let user = json[getRandomInt(0, 99)]
-                console.log("login user by ", getRandomInt(0, 99))
+                let user = json[getRandomInt(105, 290)]
+                console.log("login user by ", user)
                 
                 try {
                     await ig.simulate.preLoginFlow();
